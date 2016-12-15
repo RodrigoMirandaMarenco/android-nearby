@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
@@ -37,6 +38,7 @@ import java.util.List;
  * found or lost, and this service updates the notification, then stops itself.
  */
 public class BackgroundSubscribeIntentService extends IntentService {
+    private static final String TAG = BackgroundSubscribeIntentService.class.getSimpleName();
     private static final int MESSAGES_NOTIFICATION_ID = 1;
     private static final int NUM_MESSAGES_IN_NOTIFICATION = 5;
 
@@ -56,12 +58,14 @@ public class BackgroundSubscribeIntentService extends IntentService {
             Nearby.Messages.handleIntent(intent, new MessageListener() {
                 @Override
                 public void onFound(Message message) {
+                    Log.d(TAG, "Beacon found!");
                     Utils.saveFoundMessage(getApplicationContext(), message);
                     updateNotification();
                 }
 
                 @Override
                 public void onLost(Message message) {
+                    Log.d(TAG, "Beacon lost!");
                     Utils.removeLostMessage(getApplicationContext(), message);
                     updateNotification();
                 }

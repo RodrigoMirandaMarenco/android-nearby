@@ -45,8 +45,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.messages.Messages;
+import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageListener;
+import com.google.android.gms.nearby.messages.Messages;
 import com.google.android.gms.nearby.messages.MessagesOptions;
 import com.google.android.gms.nearby.messages.NearbyMessagesStatusCodes;
 import com.google.android.gms.nearby.messages.NearbyPermissions;
@@ -91,6 +92,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      * Backing data structure for {@code mNearbyMessagesArrayAdapter}.
      */
     private List<String> mNearbyMessagesList = new ArrayList<>();
+
+    private MessageListener mMessageListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,17 +259,32 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             return;
         }
 
+        //TODO: Fix the Service instead!!!
+        mMessageListener = new MessageListener() {
+            @Override
+            public void onFound(Message message) {
+                Log.d(TAG, "Beacon found!");
+                Utils.saveFoundMessage(getApplicationContext(), message);
+            }
+
+            @Override
+            public void onLost(Message message) {
+                Log.d(TAG, "Beacon lost!");
+                Utils.removeLostMessage(getApplicationContext(), message);
+            }
+        };
+
         SubscribeOptions options = new SubscribeOptions.Builder()
                 .setStrategy(Strategy.BLE_ONLY)
                 .build();
 
-        Nearby.Messages.subscribe(mGoogleApiClient, getPendingIntent(), options)
+        Nearby.Messages.subscribe(mGoogleApiClient, mMessageListener, options)
                 .setResultCallback(new ResultCallback<Status>() {
                     @Override
                     public void onResult(@NonNull Status status) {
                         if (status.isSuccess()) {
                             Log.i(TAG, "Subscribed successfully.");
-                            startService(getBackgroundSubscribeServiceIntent());
+                            //startService(getBackgroundSubscribeServiceIntent());
                         } else {
                             Log.e(TAG, "Operation failed. Error: " +
                                     NearbyMessagesStatusCodes.getStatusCodeString(
